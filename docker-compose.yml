@@ -1,0 +1,22 @@
+services:
+  database:
+    image: postgres:18.3-alpine3.23
+    environment:
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_USER=admin
+      - POSTGRES_DB=scribbl_db
+    container_name: scribbl_db_container
+    ports:
+      - 5433:5432
+    volumes:
+      - scribbl_vol:/var/lib/postgresql
+
+  redis:
+    image: redis:8.6-rc1-alpine
+    ports:
+      - 6379:6379
+    depends_on:
+      - database
+
+volumes:
+  scribbl_vol:
