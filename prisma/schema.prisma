@@ -18,4 +18,28 @@ model User{
   name String
   email String @unique
   game_name String @unique
+  password String
+  rooms Room[]
+  room_members RoomMembers[]
+}
+
+model Room{
+  id Int @id @default(autoincrement())
+  name String
+  code String @unique
+  creator_id Int
+  creator User @relation(fields: [creator_id], references: [id])
+  created_at DateTime @default(now())
+  closed_at DateTime?
+  room_members RoomMembers[]
+}
+
+model RoomMembers{
+  id Int @id @default(autoincrement())
+  room_id Int
+  user_id Int
+  joined_at DateTime @default(now())
+  room Room @relation(fields: [room_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
+  @@unique([room_id, user_id])
 }

@@ -1,16 +1,16 @@
-import express from 'express';
-import * as userController from '../controllers/userController.js';
-import auth from '../middleware/auth.js';
+import express from "express";
+import * as userController from "../controllers/userController.js";
+import AuthMiddleware from "../middleware/auth.js";
 
 const router = express.Router();
 
 // Public routes
-router.get('/', userController.getAllUsers);
-router.get('/:id', userController.getUserById);
+router.get("/", AuthMiddleware, userController.getAllUsers);
+router.get("/:id", AuthMiddleware, userController.getUserById);
 
 // Protected routes
-router.post('/', auth, userController.createUser);
-router.put('/:id', auth, userController.updateUser);
-router.delete('/:id', auth, userController.deleteUser);
+router.post("/", userController.createUser);
+router.put("/:id", AuthMiddleware, userController.updateUser);
+router.delete("/:id", AuthMiddleware, userController.deleteUser);
 
 export default router;

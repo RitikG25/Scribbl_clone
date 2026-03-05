@@ -1,26 +1,27 @@
-// User Controller
-const getAllUsers = (req, res) => {
+import prisma from "../utils/prismaClient";
+import bcrypt from "bcrypt";
+
+const getAllUsers = async (req, res) => {
   try {
-    const users = [
-      { id: 1, name: 'John Doe', email: 'john@example.com' },
-      { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
-    ];
-    res.json({
-      success: true,
+    const users = await prisma.user.findMany({});
+    return res.status(200).json({
+      status: "success",
       data: users,
     });
   } catch (error) {
     res.status(500).json({
-      success: false,
+      success: "failed",
       message: error.message,
     });
   }
 };
 
-const getUserById = (req, res) => {
+const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = { id, name: 'Demo User', email: 'user@example.com' };
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(id) },
+    });
     res.json({
       success: true,
       data: user,
@@ -33,69 +34,78 @@ const getUserById = (req, res) => {
   }
 };
 
-const createUser = (req, res) => {
+const createUser = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, game_name, password } = req.body;
 
-    if (!name || !email) {
+    if ((!name || !email || !game_name, !password)) {
       return res.status(400).json({
-        success: false,
-        message: 'Name and email are required',
+        success: "failed",
+        message: "Name, email,password and game_name are required",
       });
     }
 
-    const newUser = { id: 3, name, email };
+    const hashPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        game_name,
+        password: hashPassword,
+      },
+    });
     res.status(201).json({
-      success: true,
-      message: 'User created successfully',
+      success: "success",
+      message: "User created successfully",
       data: newUser,
     });
   } catch (error) {
     res.status(500).json({
-      success: false,
+      success: "failed",
       message: error.message,
     });
   }
 };
 
-const updateUser = (req, res) => {
+const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email } = req.body;
+    const { game_name } = req.body;
 
-    const updatedUser = { id, name, email };
+    const updatedUser = await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { game_name },
+    });
     res.json({
-      success: true,
-      message: 'User updated successfully',
+      success: "success",
+      message: "User game name updated successfully",
       data: updatedUser,
     });
   } catch (error) {
     res.status(500).json({
-      success: false,
+      success: "failed",
       message: error.message,
     });
   }
 };
 
-const deleteUser = (req, res) => {
+const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
+    await prisma.user.delete({
+      where: { id: parseInt(id) },
+    });
     res.json({
-      success: true,
+      success: "success",
       message: `User ${id} deleted successfully`,
     });
   } catch (error) {
     res.status(500).json({
-      success: false,
+      success: "failed",
       message: error.message,
     });
   }
 };
 
-export {
-  getAllUsers,
-  getUserById,
-  createUser,
-  updateUser,
-  deleteUser,
-};
+export { getAllUsers, getUserById, createUser, updateUser, deleteUser };
