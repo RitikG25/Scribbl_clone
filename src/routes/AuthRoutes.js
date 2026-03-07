@@ -2,7 +2,6 @@ import express from "express";
 const AuthRoutes = express.Router();
 import {
   LoginController,
-  RegisterController,
   LogoutController,
 } from "../controllers/AuthController.js";
 

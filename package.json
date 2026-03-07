@@ -16,6 +16,7 @@
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
     "ioredis": "^5.10.0",
     "jsonwebtoken": "^9.0.3",

@@ -3,6 +3,7 @@ import prisma from "../utils/prismaClient.js";
 
 const AuthMiddleware = async (req, res, next) => {
   try {
+    console.log(req.cookie);
     const token = req.cookies?.access_token;
 
     if (!token) {
