@@ -5,7 +5,7 @@ import AuthMiddleware from "../middleware/auth.js";
 const router = express.Router();
 
 // Public routes
-router.get("/", AuthMiddleware, userController.getAllUsers);
+router.get("/", userController.getAllUsers);
 router.get("/:id", AuthMiddleware, userController.getUserById);
 
 // Protected routes

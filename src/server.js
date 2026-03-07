@@ -1,33 +1,11 @@
-import express from "express";
-import userRoutes from "./routes/userRoutes.js";
-import errorHandler from "./middleware/errorHandler.js";
-import logger from "./middleware/logger.js";
-import dotenv from "dotenv";
+import http from "http";
+import app from "./app.js";
+import WSServer from "./ws/wsserver.js";
 
-dotenv.config();
-
-const app = express();
-
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(logger);
-
-// Routes
-app.use("/api/users", userRoutes);
-
-// Health check endpoint
-app.get("/health", (req, res) => {
-  res.json({ status: "OK", timestamp: new Date().toISOString() });
-});
-
-// Error handling middleware (must be last)
-app.use(errorHandler);
-
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
+  WSServer(server);
   console.log(`Server is running on port ${PORT}`);
 });
-
-export default app;
