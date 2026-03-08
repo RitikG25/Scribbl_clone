@@ -13,33 +13,143 @@ datasource db {
 }
 
 
-model User{
+enum GameStatus {
+  WAITING
+  ACTIVE
+  FINISHED
+}
+
+enum RoundStatus {
+  WAITING
+  DRAWING
+  FINISHED
+}
+
+model User {
   id Int @id @default(autoincrement())
   name String
   email String @unique
   game_name String @unique
   password String
+
   rooms Room[]
   room_members RoomMembers[]
+  game_round_messages GameRoundMessage[]
+  game_round_scores GameRoundScore[]
+  drawn_rounds GameRound[]
+  game_players GamePlayer[]
 }
 
-model Room{
+model Room {
   id Int @id @default(autoincrement())
   name String
   code String @unique
+
   creator_id Int
   creator User @relation(fields: [creator_id], references: [id])
+
   created_at DateTime @default(now())
   closed_at DateTime?
+
   room_members RoomMembers[]
+  games Game[]
 }
 
-model RoomMembers{
+model RoomMembers {
   id Int @id @default(autoincrement())
+
   room_id Int
   user_id Int
+
   joined_at DateTime @default(now())
+  left_at DateTime?
+
   room Room @relation(fields: [room_id], references: [id])
   user User @relation(fields: [user_id], references: [id])
+
   @@unique([room_id, user_id])
+}
+
+model Game {
+  id Int @id @default(autoincrement())
+
+  room_id Int
+  room Room @relation(fields: [room_id], references: [id])
+
+  max_players Int
+  max_rounds Int
+
+  status GameStatus
+
+  created_at DateTime @default(now())
+
+  rounds GameRound[]
+  scores GameRoundScore[]
+  game_players GamePlayer[]
+}
+
+model GamePlayer {
+  id Int @id @default(autoincrement())
+
+  game_id Int
+  user_id Int
+
+  joined_at DateTime @default(now())
+  left_at DateTime?
+
+  turn_order Int
+
+  game Game @relation(fields: [game_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
+
+  @@unique([game_id, user_id])
+}
+
+model GameRound {
+  id Int @id @default(autoincrement())
+  game_id Int
+  round_number Int
+  drawer_id Int
+  prompt String
+  round_limit Int @default(60)
+  status RoundStatus
+  created_at DateTime @default(now())
+  messages GameRoundMessage[]
+  scores GameRoundScore[]
+  game Game @relation(fields: [game_id], references: [id])
+  drawer User @relation(fields: [drawer_id], references: [id])
+
+  @@unique([game_id, round_number])
+}
+
+model GameRoundMessage {
+  id Int @id @default(autoincrement())
+
+  game_round_id Int
+  user_id Int
+
+  message String
+
+  created_at DateTime @default(now())
+
+  game_round GameRound @relation(fields: [game_round_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
+
+  @@index([game_round_id])
+}
+
+model GameRoundScore {
+  id Int @id @default(autoincrement())
+
+  game_round_id Int
+  user_id Int
+  game_id Int
+  score Int
+
+  created_at DateTime @default(now())
+  game Game @relation(fields: [game_id], references: [id])
+  game_round GameRound @relation(fields: [game_round_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
+
+  @@unique([game_round_id, user_id])
 }
