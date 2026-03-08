@@ -16,13 +16,16 @@ async function joinRoom(payload, ws, wss) {
   if (!roomId) return;
   if (room.has(roomId)) {
     room.get(roomId).add(ws);
-    clientRoomMap.get(ws).add(roomId);
+    if (!clientRoomMap.has(ws)) {
+      clientRoomMap.set(ws, new Set([roomId]));
+    } else {
+      clientRoomMap.get(ws).add(roomId);
+    }
   } else {
     room.set(roomId, new Set([ws]));
     clientRoomMap.set(ws, new Set([roomId]));
     await consumerClient.subscribe(`room-${roomId}`);
   }
-
   await publisherClient.publish(
     `room-${roomId}`,
     JSON.stringify({
@@ -40,7 +43,9 @@ async function leaveRoom(payload, ws, wss) {
   if (!roomId) return;
   if (room.has(roomId)) {
     room.get(roomId).delete(ws);
-    clientRoomMap.get(ws).delete(roomId);
+    if (clientRoomMap.has(ws)) {
+      clientRoomMap.get(ws).delete(roomId);
+    }
     if (clientRoomMap.get(ws).size === 0) {
       clientRoomMap.delete(ws);
     }
@@ -50,7 +55,7 @@ async function leaveRoom(payload, ws, wss) {
       return;
     }
 
-    publisherClient.publish(
+    await publisherClient.publish(
       `room-${roomId}`,
       JSON.stringify({
         event_type: "USER_LEFT",
@@ -66,7 +71,7 @@ async function leaveRoom(payload, ws, wss) {
 async function sendMessage(payload, ws, wss) {
   const roomId = payload.roomId;
   if (!roomId) return;
-  publisherClient.publish(
+  await publisherClient.publish(
     `room-${roomId}`,
     JSON.stringify({
       event_type: "SEND_MESSAGE",
@@ -107,11 +112,11 @@ async function leaveJoinedRooms(ws) {
   clientRoomMap.delete(ws);
 }
 
-function WSServer(server) {
+async function WSServer(server) {
   wss = new WebSocketServer({ noServer: true });
 
-  consumerClient.subscribe("room-*", (message, channel) => {
-    const roomId = channel.split("-")[1];
+  consumerClient.on("message", (channel, message) => {
+    const roomId = +channel.split("-")[1];
     const payload = JSON.parse(message);
     if (room.has(roomId)) {
       room.get(roomId).forEach((client) => {
@@ -134,6 +139,7 @@ function WSServer(server) {
     });
 
     ws.on("message", (data) => {
+      console.log(data.toString(), JSON.parse(data.toString()));
       const payload = JSON.parse(data.toString());
       switch (payload.event_type) {
         case "JOIN_ROOM":
@@ -156,8 +162,8 @@ function WSServer(server) {
     });
 
     ws.on("close", () => {
-      leaveJoinedRooms(ws);
       console.log("Client disconnected");
+      leaveJoinedRooms(ws);
     });
   });
 
